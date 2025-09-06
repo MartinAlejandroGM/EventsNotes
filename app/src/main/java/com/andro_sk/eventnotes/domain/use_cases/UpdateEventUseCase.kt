@@ -1,17 +1,18 @@
 package com.andro_sk.eventnotes.domain.use_cases
 
 import com.andro_sk.eventnotes.data.local.repository.FakeRepositoryImpl
+import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
-class DeleteEventByIdUseCase @Inject constructor(
+class UpdateEventUseCase @Inject constructor(
     val eventsRepository: FakeRepositoryImpl
 ) {
-    operator fun invoke(eventId: String): Flow<Response<Unit>> = flow {
-        when(val response = eventsRepository.deleteEventById(eventId)) {
+    operator fun invoke(event: EventModel): Flow<Response<Long>> = flow {
+        when(val response = eventsRepository.updateEventById(event)) {
             is Response.Success -> {
                 emit(Response.Success(response.data))
             }
@@ -23,4 +24,5 @@ class DeleteEventByIdUseCase @Inject constructor(
     }.catch {
         emit(Response.Error(it))
     }
+
 }

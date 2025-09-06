@@ -72,8 +72,7 @@ fun AppNavigation(navigationReceiver: NavigationReceiver) {
                 }
             )
         ) {
-            val filteredBy = it.arguments?.getString(AppRoutesArgs.FILTERED_BY)
-            AddUpdateEventView(filterBy = filteredBy?:"date")
+            AddUpdateEventView()
         }
         composable(
             route = "${AppRoutes.EVENT_DETAILS}/{${AppRoutesArgs.EVENT_ID}}/{${AppRoutesArgs.FILTERED_BY}}",
@@ -89,10 +88,9 @@ fun AppNavigation(navigationReceiver: NavigationReceiver) {
             )) {
 
             val eventId = it.arguments?.getString(AppRoutesArgs.EVENT_ID)
-            val filteredBy = it.arguments?.getString(AppRoutesArgs.FILTERED_BY)
 
             eventId?.let {
-                AddUpdateEventView(eventId = eventId, filterBy = filteredBy?:"date")
+                AddUpdateEventView(eventId = eventId)
             }
         }
     }
