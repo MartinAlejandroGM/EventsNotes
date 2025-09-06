@@ -11,13 +11,18 @@ import androidx.compose.runtime.mutableStateSetOf
 import androidx.compose.runtime.snapshots.SnapshotStateSet
 import com.andro_sk.eventnotes.data.local.navigation.NavigationAction
 import com.andro_sk.eventnotes.domain.contracts.NavigationEmitter
+import com.andro_sk.eventnotes.domain.models.EventModel
+import com.andro_sk.eventnotes.domain.models.EventNote
 import com.andro_sk.eventnotes.domain.models.Response
+import com.andro_sk.eventnotes.domain.use_cases.AddEventUseCase
 import com.andro_sk.eventnotes.domain.use_cases.DeleteEventByIdUseCase
 import com.andro_sk.eventnotes.domain.use_cases.FetchEventByIdUseCase
 import com.andro_sk.eventnotes.domain.use_cases.FetchEventsUseCase
+import com.andro_sk.eventnotes.domain.use_cases.UpdateEventUseCase
 import com.andro_sk.eventnotes.ui.navigation.AppRoutesArgs
 import com.andro_sk.eventnotes.ui.state.AddEditDetailsState
 import com.andro_sk.eventnotes.ui.state.DialogState
+import com.andro_sk.eventnotes.ui.state.EventByIdState
 import com.andro_sk.eventnotes.ui.state.EventsState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +35,8 @@ class EventsViewModel @Inject constructor(
     private val fetchEventsUseCase: FetchEventsUseCase,
     private val deleteEventByIdUseCase: DeleteEventByIdUseCase,
     private val fetchEventByIdUseCase: FetchEventByIdUseCase,
+    private val addEventUseCase: AddEventUseCase,
+    private val updateEventUseCase: UpdateEventUseCase,
     private val navigationEmitter: NavigationEmitter
 ) : ViewModel() {
 
@@ -39,18 +46,24 @@ class EventsViewModel @Inject constructor(
     private val _eventDate = mutableStateOf("")
     val eventDate: State<String> get() = _eventDate
 
-    private val _eventNotes = mutableStateListOf("")
-    val eventNotes: List<String> get() = _eventNotes
+    private val _eventNotes = mutableStateListOf(EventNote())
+    val eventNotes: List<EventNote> get() = _eventNotes
 
     private val _photosUris = mutableStateSetOf<Uri?>()
     val photosUris: SnapshotStateSet<Uri?> get() = _photosUris
 
-    fun onAddEventNote(note: String) {
+    private var eventId: String? = null
+
+    fun onAddEventNote(note: EventNote) {
         _eventNotes.add(note)
     }
 
-    fun onRemoveEventNote(note: String) {
-        _eventNotes.remove(note)
+    fun onUpdateEventNote(note: EventNote) {
+        _eventNotes[_eventNotes.indexOfFirst { it.id == note.id }] = note
+    }
+
+    fun onRemoveEventNote(noteId: String) {
+        _eventNotes.removeAt(_eventNotes.indexOfFirst { it.id == noteId })
     }
 
     fun onEventTittleChanged(name: String) {
@@ -61,13 +74,26 @@ class EventsViewModel @Inject constructor(
         _eventDate.value = eventDate
     }
 
+    fun setAllNotes(eventNotes: List<EventNote>) {
+        _eventNotes.clear()
+        _eventNotes.addAll(eventNotes)
+    }
+
+    fun setEventId(eventId: String) {
+        this.eventId = eventId
+    }
+
     private val _events = MutableStateFlow(EventsState(isLoading = true))
     val events: StateFlow<EventsState>
         get() = _events
 
-    private  val _event = MutableStateFlow(AddEditDetailsState(isLoading = true))
-    val event: StateFlow<AddEditDetailsState>
+    private  val _event = MutableStateFlow(EventByIdState(isLoading = true))
+    val event: StateFlow<EventByIdState>
         get() = _event
+
+    private val _saveEvent = MutableStateFlow(AddEditDetailsState(isLoading = false))
+    val saveEvent: StateFlow<AddEditDetailsState>
+        get() = _saveEvent
 
     fun fetchEvents(filterBy: String) {
         viewModelScope.launch {
@@ -139,15 +165,15 @@ class EventsViewModel @Inject constructor(
 
     fun fetchEventById(eventId: String) {
         viewModelScope.launch {
-            _event.value = AddEditDetailsState(isLoading = true)
+            _event.value = EventByIdState(isLoading = true)
             fetchEventByIdUseCase.invoke(eventId).collect { result ->
                 when(result) {
                     is Response.Success -> {
-                        _event.value = AddEditDetailsState(isLoading = false, event = result.data)
+                        _event.value = EventByIdState(isLoading = false, event = result.data)
                     }
 
                     is Response.Error -> {
-                        _event.value = AddEditDetailsState(isLoading = false, error = DialogState(
+                        _event.value = EventByIdState(isLoading = false, error = DialogState(
                             titleResId = R.string.error,
                             messageResId = R.string.error_fetch_events,
                             confirmText = R.string.retry,
@@ -163,7 +189,78 @@ class EventsViewModel @Inject constructor(
         }
     }
 
-    fun addEvent() {
+    fun onBack() {
+        viewModelScope.launch {
+            navigationEmitter.post(NavigationAction.NavigateBack)
+        }
+    }
 
+    fun onSaveEvent() {
+        _saveEvent.value = AddEditDetailsState(isLoading = true)
+        viewModelScope.launch {
+            val event = EventModel(
+                eventTittle = _eventName.value,
+                date = _eventDate.value,
+                description = "",
+                imageUrl = "",
+                eventPhotos = emptyList(),
+                eventNotes = _eventNotes
+            )
+            addEventUseCase.invoke(event).collect { result ->
+                when(result) {
+                    is Response.Success -> {
+                        _saveEvent.value = AddEditDetailsState(result =  result.data)
+                    }
+
+                    is Response.Error -> {
+                        _saveEvent.value = AddEditDetailsState(error = DialogState(
+                            titleResId = R.string.error,
+                            messageResId = R.string.error_fetch_events,
+                            confirmText = R.string.retry,
+                            dismissText = R.string.cancel,
+                            onConfirm = {
+                                onDismissDialog()
+                            },
+                            onDismiss = { onDismissDialog() }
+                        ))
+                    }
+                }
+            }
+        }
+    }
+
+    fun onUpdateEvent() {
+        _saveEvent.value = AddEditDetailsState(isLoading = true)
+        viewModelScope.launch {
+            val event = EventModel(
+                id = eventId,
+                eventTittle = _eventName.value,
+                date = _eventDate.value,
+                description = "",
+                imageUrl = "",
+                eventPhotos = emptyList(),
+                eventNotes = _eventNotes
+            )
+            updateEventUseCase.invoke(event).collect { result ->
+                when(result) {
+                    is Response.Success -> {
+                        _saveEvent.value = AddEditDetailsState(result =  result.data)
+                    }
+
+                    is Response.Error -> {
+                        _saveEvent.value = AddEditDetailsState(error = DialogState(
+                            titleResId = R.string.error,
+                            messageResId = R.string.error_fetch_events,
+                            confirmText = R.string.retry,
+                            dismissText = R.string.cancel,
+                            onConfirm = {
+                                onDismissDialog()
+                            },
+                            onDismiss = { onDismissDialog() }
+                        ))
+                    }
+                }
+            }
+        }
     }
 }

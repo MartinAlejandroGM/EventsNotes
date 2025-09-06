@@ -9,10 +9,11 @@ data class EventModel(
     val description: String = "",
     val imageUrl: String = "",
     val date: String = LocalDate.now().toString(),
-    val eventPhotos: EventPhotos = EventPhotos()
+    val eventPhotos: List<Uri> = arrayListOf(),
+    val eventNotes: List<EventNote> = arrayListOf()
 )
 
-data class EventPhotos(
-    val id: String? = null,
-    val urls: List<Uri> = arrayListOf()
+data class EventNote(
+    val id: String = "",
+    val description: String = ""
 )

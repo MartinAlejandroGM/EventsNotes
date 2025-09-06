@@ -160,18 +160,6 @@ private fun GetAppBar(
 ) {
     TopAppBar(
         title = { Text(stringResource(R.string.your_events)) },
-        navigationIcon = {
-            IconButton(
-                onClick = {
-                    homeViewActions.invoke(HomeViewActions.OnNavigateToAddEvent())
-                }
-            ) {
-                Icon(
-                    Icons.Filled.Menu,
-                    contentDescription = null,
-                )
-            }
-        },
         actions = {
             Row {
                 IconButton(onClick = { homeViewActions.invoke(HomeViewActions.FilterEvents) }) {
