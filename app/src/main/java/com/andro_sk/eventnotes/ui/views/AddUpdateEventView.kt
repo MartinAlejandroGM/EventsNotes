@@ -1,5 +1,6 @@
 package com.andro_sk.eventnotes.ui.views
 
+import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -30,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.andro_sk.eventnotes.R
-import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.ui.core.CustomAlertDialog
 import com.andro_sk.eventnotes.ui.viewmodels.EventsViewModel
 import androidx.compose.foundation.verticalScroll
@@ -43,8 +43,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.andro_sk.eventnotes.domain.models.EventNote
+import com.andro_sk.eventnotes.domain.models.EventPhoto
 import com.andro_sk.eventnotes.ui.core.CustomOutlinedTextField
 import com.andro_sk.eventnotes.ui.core.DatePickerField
 import com.andro_sk.eventnotes.ui.core.EventPhotoRow
@@ -53,7 +55,7 @@ import com.andro_sk.eventnotes.ui.utils.generateRandomUUID
 
 @Composable
 fun AddUpdateEventView(
-    eventId: String? = null,
+    eventId: String = "",
     viewModel: EventsViewModel = hiltViewModel()
 ) {
     val eventTittle by remember { viewModel.eventName }
@@ -82,31 +84,35 @@ fun AddUpdateEventView(
         LoadingDialog()
     }
 
-    if (!eventId.isNullOrBlank()) {
+    if (eventId.isNotBlank()) {
         val event by viewModel.event.collectAsState()
-        LaunchedEffect(eventId) {
+        LaunchedEffect(Unit) {
             viewModel.fetchEventById(eventId)
         }
         event.event?.let {
             LaunchedEffect(Unit) {
                 viewModel.onEventTittleChanged(it.eventTittle)
                 viewModel.onEventDateChanged(it.date)
+                viewModel.onAddPhotos(it.eventPhotos.map { photo ->
+                    photo.uri
+                })
                 viewModel.setAllNotes(it.eventNotes)
-                viewModel.setEventId(it.id.orEmpty())
+                viewModel.setEventId(it.id)
             }
             AddUpdateDetailsEventContent(
                 eventTittle = eventTittle,
-                event = it, eventDate = eventDate,
-                photoUris = photosUris,
+                eventId = it.id,
+                eventDate = eventDate,
+                photos = photosUris,
                 notes = eventNotes,
                 addUpdateDetailsEventViewActions = { action ->
                 when(action) {
                     is AddUpdateDetailsEventViewActions.OnBack -> viewModel.onBack()
                     is AddUpdateDetailsEventViewActions.OnSave -> viewModel.onUpdateEvent()
-                    is AddUpdateDetailsEventViewActions.OnWriteName -> viewModel.onEventTittleChanged(action.name)
-                    is AddUpdateDetailsEventViewActions.OnRemovePhoto -> {}
-                    is AddUpdateDetailsEventViewActions.OnSelectDate -> viewModel.onEventDateChanged(action.selectedDate)
-                    is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> {}
+                    is AddUpdateDetailsEventViewActions.OnWriteName ->  viewModel.onEventTittleChanged(action.name)
+                    is AddUpdateDetailsEventViewActions.OnRemovePhoto -> viewModel.onRemovePhoto(action.photo)
+                    is AddUpdateDetailsEventViewActions.OnSelectDate ->  viewModel.onEventDateChanged(action.selectedDate)
+                    is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> viewModel.onAddPhotos(action.uris)
                     is AddUpdateDetailsEventViewActions.OnUpdateNotes -> viewModel.onUpdateEventNote(action.note)
                     is AddUpdateDetailsEventViewActions.OnAddNote -> viewModel.onAddEventNote(action.note)
                     is AddUpdateDetailsEventViewActions.OnRemoveNote -> viewModel.onRemoveEventNote(action.id)
@@ -131,16 +137,16 @@ fun AddUpdateEventView(
     } else {
         AddUpdateDetailsEventContent(eventTittle = eventTittle,
             eventDate = eventDate,
-            photoUris = photosUris,
+            photos = photosUris,
             notes = eventNotes,
             addUpdateDetailsEventViewActions = { action ->
             when(action) {
                 is AddUpdateDetailsEventViewActions.OnBack -> viewModel.onBack()
                 is AddUpdateDetailsEventViewActions.OnSave -> viewModel.onSaveEvent()
-                is AddUpdateDetailsEventViewActions.OnWriteName -> { viewModel.onEventTittleChanged(action.name) }
-                is AddUpdateDetailsEventViewActions.OnRemovePhoto -> {}
-                is AddUpdateDetailsEventViewActions.OnSelectDate -> { viewModel.onEventDateChanged(action.selectedDate) }
-                is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> {}
+                is AddUpdateDetailsEventViewActions.OnWriteName ->  viewModel.onEventTittleChanged(action.name)
+                is AddUpdateDetailsEventViewActions.OnRemovePhoto -> viewModel.onRemovePhoto(action.photo)
+                is AddUpdateDetailsEventViewActions.OnSelectDate ->  viewModel.onEventDateChanged(action.selectedDate)
+                is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> viewModel.onAddPhotos(action.uris)
                 is AddUpdateDetailsEventViewActions.OnUpdateNotes -> viewModel.onUpdateEventNote(action.note)
                 is AddUpdateDetailsEventViewActions.OnAddNote -> viewModel.onAddEventNote(action.note)
                 is AddUpdateDetailsEventViewActions.OnRemoveNote -> viewModel.onRemoveEventNote(action.id)
@@ -154,14 +160,21 @@ fun AddUpdateEventView(
 fun AddUpdateDetailsEventContent(
     eventTittle: String,
     eventDate: String,
-    photoUris: Set<Uri?>,
+    photos: List<EventPhoto>,
+    eventId: String = "",
     notes: List<EventNote>,
-    event: EventModel = EventModel(),
     addUpdateDetailsEventViewActions: (AddUpdateDetailsEventViewActions) -> Unit
 ) {
+    val context = LocalContext.current.applicationContext
     val pickMedia =
         rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
             if (uris.isNotEmpty()) {
+                val contentResolver = context.contentResolver
+                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
+
+                for (uri in uris)
+                    contentResolver.takePersistableUriPermission(uri, takeFlags)
+
                 addUpdateDetailsEventViewActions.invoke(AddUpdateDetailsEventViewActions.OnSelectCoverPhoto(uris))
             }
         }
@@ -170,7 +183,7 @@ fun AddUpdateDetailsEventContent(
         topBar = {
             TopAppBar(
                 modifier = Modifier,
-                title = { Text(stringResource(if (event.id == null) R.string.create_event else R.string.update_event)) },
+                title = { Text(stringResource(if (eventId.isBlank()) R.string.create_event else R.string.update_event)) },
                 navigationIcon = {
                     IconButton(
                         onClick = { addUpdateDetailsEventViewActions.invoke(
@@ -231,14 +244,12 @@ fun AddUpdateDetailsEventContent(
                             Text(stringResource(R.string.event_photos))
                         }
                     }
-                    event.eventPhotos.forEach { uri ->
+                    photos.forEach { photo ->
                         EventPhotoRow(
-                            uri,
+                            photo.uri,
                             onRemovePhoto = {
                                 addUpdateDetailsEventViewActions.invoke(
-                                    AddUpdateDetailsEventViewActions.OnRemovePhoto(
-                                        it
-                                    )
+                                    AddUpdateDetailsEventViewActions.OnRemovePhoto(photo)
                                 )
                             }
                         )
@@ -327,7 +338,7 @@ sealed class AddUpdateDetailsEventViewActions() {
     data class OnAddNote(val note: EventNote): AddUpdateDetailsEventViewActions()
     data class OnRemoveNote(val id: String): AddUpdateDetailsEventViewActions()
     data class OnSelectCoverPhoto(val uris: List<Uri>) : AddUpdateDetailsEventViewActions()
-    data class OnRemovePhoto(val uri: Uri) : AddUpdateDetailsEventViewActions()
+    data class OnRemovePhoto(val photo: EventPhoto) : AddUpdateDetailsEventViewActions()
     object OnSave : AddUpdateDetailsEventViewActions()
 }
 
@@ -358,7 +369,7 @@ fun AddUpdateDetailsEventViewPreview() {
     AddUpdateDetailsEventContent(
         eventTittle = "",
         eventDate = "",
-        photoUris = setOf(),
+        photos = arrayListOf(),
         notes = arrayListOf(),
         addUpdateDetailsEventViewActions = { actions ->
         when(actions) {

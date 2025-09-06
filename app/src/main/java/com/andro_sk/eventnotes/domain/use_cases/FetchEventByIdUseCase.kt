@@ -1,5 +1,6 @@
 package com.andro_sk.eventnotes.domain.use_cases
 
+import com.andro_sk.eventnotes.data.local.repository.EventNotesDbRepositoryImpl
 import com.andro_sk.eventnotes.data.local.repository.FakeRepositoryImpl
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class FetchEventByIdUseCase @Inject constructor(
-    val eventsRepository: FakeRepositoryImpl
+    val eventsRepository: EventNotesDbRepositoryImpl
 ) {
     operator fun invoke(eventId: String): Flow<Response<EventModel>> = flow {
         when(val response = eventsRepository.fetchEventById(eventId)) {

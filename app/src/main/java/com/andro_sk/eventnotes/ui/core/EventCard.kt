@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.net.toUri
 import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.ui.utils.getDescriptionDaysText
@@ -201,7 +202,7 @@ fun EventCardPreview() {
             id = "1",
             eventTittle = "Peach's Party",
             description = "3 Days left",
-            imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+            imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
             date = "01/10/2025"
         ),
         onRemoveEvent = {},
