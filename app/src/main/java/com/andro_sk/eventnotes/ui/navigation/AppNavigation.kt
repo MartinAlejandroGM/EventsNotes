@@ -11,8 +11,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.andro_sk.eventnotes.data.local.navigation.NavigationAction
 import com.andro_sk.eventnotes.domain.contracts.NavigationReceiver
-import com.andro_sk.eventnotes.ui.views.AddUpdateEventView
-import com.andro_sk.eventnotes.ui.views.HomeView
+import com.andro_sk.eventnotes.ui.views.upsert.AddEventView
+import com.andro_sk.eventnotes.ui.views.home.HomeView
+import com.andro_sk.eventnotes.ui.views.upsert.UpdateEventView
 import kotlinx.coroutines.launch
 
 @Composable
@@ -72,7 +73,7 @@ fun AppNavigation(navigationReceiver: NavigationReceiver) {
                 }
             )
         ) {
-            AddUpdateEventView()
+            AddEventView()
         }
         composable(
             route = "${AppRoutes.EVENT_DETAILS}/{${AppRoutesArgs.EVENT_ID}}/{${AppRoutesArgs.FILTERED_BY}}",
@@ -90,7 +91,7 @@ fun AppNavigation(navigationReceiver: NavigationReceiver) {
             val eventId = it.arguments?.getString(AppRoutesArgs.EVENT_ID)
 
             eventId?.let {
-                AddUpdateEventView(eventId = eventId)
+                UpdateEventView(eventId = eventId)
             }
         }
     }

@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.andro_sk.eventnotes.ui.utils.convertMillisToDate
 
@@ -65,4 +66,26 @@ fun DatePickerField(
             }
         )
     }
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun DatePickerPreview() {
+    DatePickerField(
+        modifier = Modifier,
+        label = "",
+        value = "",
+        onDateSelected = {}
+    )
+}
+
+@Preview(showSystemUi = true)
+@Composable
+fun DatePickerDataPreview() {
+    DatePickerField(
+        modifier = Modifier,
+        label = "Date",
+        value = "10/10/1995",
+        onDateSelected = {}
+    )
 }

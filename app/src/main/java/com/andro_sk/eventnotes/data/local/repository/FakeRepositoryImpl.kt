@@ -14,35 +14,30 @@ class FakeRepositoryImpl @Inject constructor() : EventsRepository {
             EventModel(
                 id = "1",
                 eventTittle = "Mario's Party",
-                description = "Its Mario's Party",
                 imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/02/2025"
             ),
             EventModel(
                 id = "2",
                 eventTittle = "Luigi's Party",
-                description = "Its Luigi's Party",
                 imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "10/12/2025"
             ),
             EventModel(
                 id = "3",
                 eventTittle = "Peach's Party",
-                description = "Its Peach's Party",
                 imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/05/2025"
             ),
             EventModel(
                 id = "4",
                 eventTittle = "Daisy's Party",
-                description = "Its Daisy's Party",
                 imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/07/2025"
             ),
             EventModel(
                 id = "5",
                 eventTittle = "Rosalina's Party",
-                description = "Its Rosalina's Party",
                 imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "10/01/2026"
             )

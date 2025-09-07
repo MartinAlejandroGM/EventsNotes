@@ -19,7 +19,7 @@ fun EventWithDetails.getEventModelByDaos(): EventModel =
         eventNotes = this.notes.map {
             EventNote(
                 id = it.id,
-                description = it.notes
+                description = it.description
             )
         },
         eventPhotos = this.photos.map {
@@ -48,7 +48,7 @@ fun EventModel.toNotesEntity(): List<NotesEntity> {
         NotesEntity(
             eventId = this.id,
             id = it.id,
-            notes = it.description
+            description = it.description
         )
     }
 }
