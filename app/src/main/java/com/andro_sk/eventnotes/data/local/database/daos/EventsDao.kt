@@ -2,21 +2,24 @@ package com.andro_sk.eventnotes.data.local.database.daos
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Update
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.andro_sk.eventnotes.data.local.database.entities.EventsEntity
+import com.andro_sk.eventnotes.data.local.database.pojo.EventWithDetails
 
 @Dao
 interface EventsDao {
 
-    @Query("SELECT * FROM events ORDER BY event_date")
-    suspend fun fetchEvents(): List<EventsEntity>
+    @Transaction
+    @Query("SELECT * FROM events")
+    suspend fun fetchEvents(): List<EventWithDetails>
+
+    @Transaction
+    @Query("SELECT * FROM events WHERE id = :eventId")
+    suspend fun fetchEventById(eventId: String): List<EventWithDetails>
 
     @Upsert
-    suspend fun insertEvent(event: EventsEntity): Long
-
-    @Update
-    suspend fun updateEvent(event: EventsEntity): Int
+    suspend fun upsertEvent(event: EventsEntity): Long
 
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEventById(eventId: String): Int

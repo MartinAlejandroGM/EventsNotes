@@ -6,7 +6,7 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "events_photos",
+    tableName = "notes",
     foreignKeys = [
         ForeignKey(
             entity = EventsEntity::class,
@@ -16,8 +16,9 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class PhotoEntity(
+
+data class NotesEntity(
     @ColumnInfo(name = "event_id", index = true) val eventId: String,
-    @ColumnInfo(name = "uri") val uri: String,
+    @ColumnInfo(name = "notes") val notes: String,
     @PrimaryKey(autoGenerate = false) var id: String
 )

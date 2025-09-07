@@ -7,23 +7,24 @@ import androidx.lifecycle.viewModelScope
 import com.andro_sk.eventnotes.R
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateSetOf
-import androidx.compose.runtime.snapshots.SnapshotStateSet
+import androidx.core.net.toUri
 import com.andro_sk.eventnotes.data.local.navigation.NavigationAction
 import com.andro_sk.eventnotes.domain.contracts.NavigationEmitter
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.EventNote
+import com.andro_sk.eventnotes.domain.models.EventPhoto
 import com.andro_sk.eventnotes.domain.models.Response
-import com.andro_sk.eventnotes.domain.use_cases.AddEventUseCase
 import com.andro_sk.eventnotes.domain.use_cases.DeleteEventByIdUseCase
 import com.andro_sk.eventnotes.domain.use_cases.FetchEventByIdUseCase
 import com.andro_sk.eventnotes.domain.use_cases.FetchEventsUseCase
-import com.andro_sk.eventnotes.domain.use_cases.UpdateEventUseCase
+import com.andro_sk.eventnotes.domain.use_cases.UpsertEventUseCase
 import com.andro_sk.eventnotes.ui.navigation.AppRoutesArgs
 import com.andro_sk.eventnotes.ui.state.AddEditDetailsState
 import com.andro_sk.eventnotes.ui.state.DialogState
 import com.andro_sk.eventnotes.ui.state.EventByIdState
 import com.andro_sk.eventnotes.ui.state.EventsState
+import com.andro_sk.eventnotes.ui.utils.generateRandomUUID
+import com.andro_sk.eventnotes.ui.utils.toEventPhotosList
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -35,8 +36,7 @@ class EventsViewModel @Inject constructor(
     private val fetchEventsUseCase: FetchEventsUseCase,
     private val deleteEventByIdUseCase: DeleteEventByIdUseCase,
     private val fetchEventByIdUseCase: FetchEventByIdUseCase,
-    private val addEventUseCase: AddEventUseCase,
-    private val updateEventUseCase: UpdateEventUseCase,
+    private val upsertEventUseCase: UpsertEventUseCase,
     private val navigationEmitter: NavigationEmitter
 ) : ViewModel() {
 
@@ -49,10 +49,18 @@ class EventsViewModel @Inject constructor(
     private val _eventNotes = mutableStateListOf(EventNote())
     val eventNotes: List<EventNote> get() = _eventNotes
 
-    private val _photosUris = mutableStateSetOf<Uri?>()
-    val photosUris: SnapshotStateSet<Uri?> get() = _photosUris
+    private val _photosUris = mutableStateListOf<EventPhoto>()
+    val photosUris: List<EventPhoto> get() = _photosUris
 
-    private var eventId: String? = null
+    private var eventId: String = ""
+
+    fun onAddPhotos(photoUris: List<Uri>) {
+        _photosUris.addAll(photoUris.toEventPhotosList(_photosUris.map { it.uri }))
+    }
+
+    fun onRemovePhoto(photoUri: EventPhoto) {
+        _photosUris.remove(photoUri)
+    }
 
     fun onAddEventNote(note: EventNote) {
         _eventNotes.add(note)
@@ -199,14 +207,15 @@ class EventsViewModel @Inject constructor(
         _saveEvent.value = AddEditDetailsState(isLoading = true)
         viewModelScope.launch {
             val event = EventModel(
+                id = generateRandomUUID(),
                 eventTittle = _eventName.value,
                 date = _eventDate.value,
                 description = "",
-                imageUrl = "",
-                eventPhotos = emptyList(),
+                imageUrl = _photosUris.firstOrNull()?.uri ?: Uri.EMPTY,
+                eventPhotos = _photosUris,
                 eventNotes = _eventNotes
             )
-            addEventUseCase.invoke(event).collect { result ->
+            upsertEventUseCase.invoke(event).collect { result ->
                 when(result) {
                     is Response.Success -> {
                         _saveEvent.value = AddEditDetailsState(result =  result.data)
@@ -236,12 +245,11 @@ class EventsViewModel @Inject constructor(
                 id = eventId,
                 eventTittle = _eventName.value,
                 date = _eventDate.value,
-                description = "",
-                imageUrl = "",
-                eventPhotos = emptyList(),
+                imageUrl = _photosUris.firstOrNull()?.uri?: Uri.EMPTY,
+                eventPhotos = _photosUris,
                 eventNotes = _eventNotes
             )
-            updateEventUseCase.invoke(event).collect { result ->
+            upsertEventUseCase.invoke(event).collect { result ->
                 when(result) {
                     is Response.Success -> {
                         _saveEvent.value = AddEditDetailsState(result =  result.data)

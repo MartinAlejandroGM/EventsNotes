@@ -1,5 +1,6 @@
 package com.andro_sk.eventnotes.data.local.repository
 
+import androidx.core.net.toUri
 import com.andro_sk.eventnotes.domain.contracts.EventsRepository
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
@@ -14,35 +15,35 @@ class FakeRepositoryImpl @Inject constructor() : EventsRepository {
                 id = "1",
                 eventTittle = "Mario's Party",
                 description = "Its Mario's Party",
-                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/02/2025"
             ),
             EventModel(
                 id = "2",
                 eventTittle = "Luigi's Party",
                 description = "Its Luigi's Party",
-                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "10/12/2025"
             ),
             EventModel(
                 id = "3",
                 eventTittle = "Peach's Party",
                 description = "Its Peach's Party",
-                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/05/2025"
             ),
             EventModel(
                 id = "4",
                 eventTittle = "Daisy's Party",
                 description = "Its Daisy's Party",
-                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "09/07/2025"
             ),
             EventModel(
                 id = "5",
                 eventTittle = "Rosalina's Party",
                 description = "Its Rosalina's Party",
-                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es",
+                imageUrl = "https://static.wikia.nocookie.net/mario/images/6/6d/Plano_PCP.png/revision/latest?cb=20110928233126&path-prefix=es".toUri(),
                 date = "10/01/2026"
             )
         )
@@ -51,9 +52,13 @@ class FakeRepositoryImpl @Inject constructor() : EventsRepository {
         return Response.Success(eventsList.firstOrNull { it.id == eventId } ?: EventModel())
     }
 
-    override suspend fun updateEventById(event: EventModel): Response<Long> {
-        val indexToChange = eventsList.indexOfFirst { it.id == event.id }
-        eventsList[indexToChange] = event
+    override suspend fun upsertEvent(event: EventModel): Response<Long> {
+        if (eventsList.any { it.id == event.id }) {
+            val indexToChange = eventsList.indexOfFirst { it.id == event.id }
+            eventsList[indexToChange] = event
+        } else {
+            eventsList.add(event.copy(id = (++index).toString()))
+        }
         return Response.Success(1)
     }
 
@@ -64,10 +69,5 @@ class FakeRepositoryImpl @Inject constructor() : EventsRepository {
 
     override suspend fun fetchEvents(): Response<List<EventModel>> {
         return Response.Success( eventsList)
-    }
-
-    override suspend fun addEvent(event: EventModel): Response<Long> {
-        eventsList.add(event.copy(id = (++index).toString()))
-        return Response.Success(1)
     }
 }

@@ -1,5 +1,6 @@
 package com.andro_sk.eventnotes.ui.views
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,10 +9,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.DrawerState
-import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -19,14 +17,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,13 +47,10 @@ fun HomeView(
     LaunchedEffect(filteredBy) {
         viewModel.fetchEvents(filteredBy)
     }
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
-    val coroutineScope = rememberCoroutineScope()
 
     events.events?.let {
         HomeViewContent(
             events = it,
-            drawerState,
             homeViewActions = { action ->
                 when (action) {
                     is HomeViewActions.OnNavigateToEventDetails -> {
@@ -82,7 +75,6 @@ fun HomeView(
                             filteredBy = "name"
                         else filteredBy = "date"
                     }
-                    is HomeViewActions.ToggleDrawer -> {}
                 }
             }
         )
@@ -106,7 +98,7 @@ fun HomeView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeViewContent(events: List<EventModel>, drawerState: DrawerState, homeViewActions: (HomeViewActions) -> Unit) {
+private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeViewActions) -> Unit) {
     Scaffold(
         floatingActionButton = {
             GetFloatingButton(homeViewActions)
@@ -119,7 +111,7 @@ private fun HomeViewContent(events: List<EventModel>, drawerState: DrawerState, 
             .padding(innerPadding)
             .fillMaxSize()
             .padding(horizontal = 16.dp)) {
-            items(items = events, key = {it.id!!}) { event ->
+            items(items = events, key = {it.id}) { event ->
                 EventCard(
                     modifier = Modifier
                         .padding(vertical = 4.dp)
@@ -127,17 +119,13 @@ private fun HomeViewContent(events: List<EventModel>, drawerState: DrawerState, 
                     event = event,
                     onEditEvent =
                         {
-                            homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id.toString()))
+                            homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id))
                         },
                     onRemoveEvent = {
-                        event.id?.let {
-                            homeViewActions.invoke(HomeViewActions.RemoveEventItem(it))
-                        }
+                        homeViewActions.invoke(HomeViewActions.RemoveEventItem(event.id))
                     },
                     onNavigateToEventDetails = {
-                        event.id?.let {
-                            homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(it))
-                        }
+                        homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id))
                     })
             }
         }
@@ -182,7 +170,6 @@ private fun GetAppBar(
 sealed class HomeViewActions {
     data class OnNavigateToAddEvent(val eventId: String = "") : HomeViewActions()
     data class OnNavigateToEventDetails(val eventId: String) : HomeViewActions()
-    data class ToggleDrawer(val open: Boolean) : HomeViewActions()
     data class RemoveEventItem(val eventId: String) : HomeViewActions()
     object FilterEvents : HomeViewActions()
 }
@@ -190,39 +177,37 @@ sealed class HomeViewActions {
 @Preview
 @Composable
 fun HomePreview() {
-    val drawerState = rememberDrawerState(DrawerValue.Closed)
     HomeViewContent(
-        drawerState = drawerState,
         events = listOf(
             EventModel(
                 id = "1",
                 eventTittle = "Mario's Party",
                 description = "Its Mario's Party",
-                imageUrl = ""
+                imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "2",
                 eventTittle = "Luigi's Party",
                 description = "Its Luigi's Party",
-                imageUrl = ""
+                imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "3",
                 eventTittle = "Peach's Party",
                 description = "Its Peach's Party",
-                imageUrl = ""
+                imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "4",
                 eventTittle = "Daisy's Party",
                 description = "Its Daisy's Party",
-                imageUrl = ""
+                imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "5",
                 eventTittle = "Rosalina's Party",
                 description = "Its Rosalina's Party",
-                imageUrl = ""
+                imageUrl = Uri.EMPTY
             )
         )
     ) {
@@ -231,7 +216,6 @@ fun HomePreview() {
             is HomeViewActions.RemoveEventItem -> {}
             is HomeViewActions.OnNavigateToAddEvent -> {}
             is HomeViewActions.FilterEvents -> {}
-            is HomeViewActions.ToggleDrawer -> {}
         }
     }
 }
