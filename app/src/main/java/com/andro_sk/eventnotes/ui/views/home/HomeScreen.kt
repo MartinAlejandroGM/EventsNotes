@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.views
+package com.andro_sk.eventnotes.ui.views.home
 
 import android.net.Uri
 import androidx.compose.foundation.layout.Row
@@ -117,16 +117,13 @@ private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeView
                         .padding(vertical = 4.dp)
                         .animateItem(),
                     event = event,
-                    onEditEvent =
-                        {
+                    onEditEvent = {
                             homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id))
-                        },
+                                  },
                     onRemoveEvent = {
-                        homeViewActions.invoke(HomeViewActions.RemoveEventItem(event.id))
-                    },
-                    onNavigateToEventDetails = {
-                        homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id))
-                    })
+                        homeViewActions.invoke(HomeViewActions.RemoveEventItem(event.id)) 
+                                    }
+                )
             }
         }
     }
@@ -182,31 +179,26 @@ fun HomePreview() {
             EventModel(
                 id = "1",
                 eventTittle = "Mario's Party",
-                description = "Its Mario's Party",
                 imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "2",
                 eventTittle = "Luigi's Party",
-                description = "Its Luigi's Party",
                 imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "3",
                 eventTittle = "Peach's Party",
-                description = "Its Peach's Party",
                 imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "4",
                 eventTittle = "Daisy's Party",
-                description = "Its Daisy's Party",
                 imageUrl = Uri.EMPTY
             ),
             EventModel(
                 id = "5",
                 eventTittle = "Rosalina's Party",
-                description = "Its Rosalina's Party",
                 imageUrl = Uri.EMPTY
             )
         )

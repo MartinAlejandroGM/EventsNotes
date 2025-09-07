@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.andro_sk.eventnotes.R
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateListOf
-import androidx.core.net.toUri
 import com.andro_sk.eventnotes.data.local.navigation.NavigationAction
 import com.andro_sk.eventnotes.domain.contracts.NavigationEmitter
 import com.andro_sk.eventnotes.domain.models.EventModel
@@ -46,7 +45,7 @@ class EventsViewModel @Inject constructor(
     private val _eventDate = mutableStateOf("")
     val eventDate: State<String> get() = _eventDate
 
-    private val _eventNotes = mutableStateListOf(EventNote())
+    private val _eventNotes = mutableStateListOf<EventNote>()
     val eventNotes: List<EventNote> get() = _eventNotes
 
     private val _photosUris = mutableStateListOf<EventPhoto>()
@@ -210,7 +209,6 @@ class EventsViewModel @Inject constructor(
                 id = generateRandomUUID(),
                 eventTittle = _eventName.value,
                 date = _eventDate.value,
-                description = "",
                 imageUrl = _photosUris.firstOrNull()?.uri ?: Uri.EMPTY,
                 eventPhotos = _photosUris,
                 eventNotes = _eventNotes
@@ -227,10 +225,8 @@ class EventsViewModel @Inject constructor(
                             messageResId = R.string.error_fetch_events,
                             confirmText = R.string.retry,
                             dismissText = R.string.cancel,
-                            onConfirm = {
-                                onDismissDialog()
-                            },
-                            onDismiss = { onDismissDialog() }
+                            onConfirm = {},
+                            onDismiss = {}
                         ))
                     }
                 }
@@ -261,10 +257,8 @@ class EventsViewModel @Inject constructor(
                             messageResId = R.string.error_fetch_events,
                             confirmText = R.string.retry,
                             dismissText = R.string.cancel,
-                            onConfirm = {
-                                onDismissDialog()
-                            },
-                            onDismiss = { onDismissDialog() }
+                            onConfirm = {},
+                            onDismiss = {}
                         ))
                     }
                 }

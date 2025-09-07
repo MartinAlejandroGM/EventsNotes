@@ -6,7 +6,6 @@ import java.time.LocalDate
 data class EventModel(
     val id: String = "",
     val eventTittle: String = "",
-    val description: String = "",
     val imageUrl: Uri = Uri.EMPTY,
     val date: String = LocalDate.now().toString(),
     val eventPhotos: List<EventPhoto> = arrayListOf(),
