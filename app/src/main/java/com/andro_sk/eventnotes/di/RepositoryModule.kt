@@ -6,7 +6,6 @@ import com.andro_sk.eventnotes.data.local.database.daos.EventsPhotosDao
 import com.andro_sk.eventnotes.data.local.database.daos.NotesDao
 import com.andro_sk.eventnotes.data.local.repository.DataStoreRepositoryImpl
 import com.andro_sk.eventnotes.data.local.repository.EventNotesDbRepositoryImpl
-import com.andro_sk.eventnotes.data.local.repository.FakeRepositoryImpl
 import com.andro_sk.eventnotes.domain.contracts.DataStoreRepository
 import com.andro_sk.eventnotes.domain.contracts.EventsRepository
 import dagger.Module
@@ -19,12 +18,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object RepositoryModule {
-
-    @Provides
-    @Singleton
-    fun providesFakeRepository(): EventsRepository =
-        FakeRepositoryImpl()
-
     @Provides
     @Singleton
     fun providesEventsRepository(eventsDao: EventsDao, notesDao: NotesDao, photosDao: EventsPhotosDao): EventsRepository =
