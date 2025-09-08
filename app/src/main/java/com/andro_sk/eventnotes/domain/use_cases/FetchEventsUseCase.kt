@@ -1,36 +1,32 @@
 package com.andro_sk.eventnotes.domain.use_cases
 
 import com.andro_sk.eventnotes.data.local.repository.EventNotesDbRepositoryImpl
-import com.andro_sk.eventnotes.data.local.repository.FakeRepositoryImpl
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flow
+import com.andro_sk.eventnotes.ui.utils.getParsedDateOrDefaultDate
 import javax.inject.Inject
 
 class FetchEventsUseCase @Inject constructor(
-    val eventsRepository: EventNotesDbRepositoryImpl
+    private val eventsRepository: EventNotesDbRepositoryImpl
 ) {
-    operator fun invoke(filterBy: String): Flow<Response<List<EventModel>>> = flow {
+    suspend operator fun invoke(sortedBy: String): Response<List<EventModel>> =
         when(val response = eventsRepository.fetchEvents()) {
             is Response.Success -> {
-                val listFiltered = when(filterBy) {
+                val sortedList = when(sortedBy) {
                     "date" -> {
-                        response.data.sortedBy { it.date }
+                        response.data.sortedBy {
+                            it.date.getParsedDateOrDefaultDate()
+                        }
                     }
                     else -> {
-                        response.data.sortedBy { it.eventTittle }
+                        response.data.sortedBy { it.eventTittle.lowercase() }
                     }
                 }
-                emit(Response.Success(listFiltered))
+                Response.Success(sortedList)
             }
 
             is Response.Error -> {
-                emit(Response.Error(response.error))
+                Response.Error(response.error)
             }
         }
-    }.catch {
-        emit(Response.Error(it))
-    }
 }

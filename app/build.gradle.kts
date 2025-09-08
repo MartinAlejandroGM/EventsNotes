@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.landscapist.glide)
     implementation(libs.bundles.hilt.essentials)
     implementation(libs.bundles.room.essentials)
+    implementation(libs.androidx.datastore)
     debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)

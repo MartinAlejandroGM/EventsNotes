@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -114,8 +115,8 @@ private fun AddEventViewPreview() {
     ManageEventContent(
         eventTittle = "",
         eventDate = "",
-        photos = arrayListOf(),
-        notes = arrayListOf(),
+        photos = SnapshotStateList(),
+        notes = SnapshotStateList(),
         addUpdateDetailsEventViewActions = { actions ->
             when(actions) {
                 is AddUpdateDetailsEventViewActions.OnBack -> {}

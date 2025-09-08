@@ -1,96 +1,84 @@
 package com.andro_sk.eventnotes.ui.views.upsert
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
+import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.andro_sk.eventnotes.ui.core.CustomAlertDialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.andro_sk.eventnotes.domain.models.EventModel
+import com.andro_sk.eventnotes.domain.models.EventNote
+import com.andro_sk.eventnotes.domain.models.EventPhoto
 import com.andro_sk.eventnotes.ui.core.LoadingDialog
 import com.andro_sk.eventnotes.ui.core.ManageEventContent
+import com.andro_sk.eventnotes.ui.state.EventDetailsState
 import com.andro_sk.eventnotes.ui.utils.AddUpdateDetailsEventViewActions
-import com.andro_sk.eventnotes.ui.viewmodels.EventsViewModel
+import com.andro_sk.eventnotes.ui.utils.toEventPhotosList
+import com.andro_sk.eventnotes.ui.viewmodels.UpsertViewModel
 
 @Composable
 fun UpdateEventView(
     eventId: String,
-    viewModel: EventsViewModel = hiltViewModel()
+    viewModel: UpsertViewModel = hiltViewModel()
 ) {
-    val eventTittle by remember { viewModel.eventName }
-    val eventDate by remember { viewModel.eventDate }
-    val photosUris = remember { viewModel.photosUris }
-    val eventNotes = remember { viewModel.eventNotes }
 
-    val eventSaved by viewModel.saveEvent.collectAsState()
+    var tittle by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf("") }
+    val photos = remember { mutableStateListOf<EventPhoto>() }
+    val notes = remember { mutableStateListOf<EventNote>() }
 
-    eventSaved.result?.let {
-        viewModel.onBack()
-    }
-
-    eventSaved.error?.let { error ->
-        CustomAlertDialog(
-            confirmText = stringResource(error.confirmText),
-            dismissText = error.dismissText?.let { stringResource(it) },
-            title = error.titleResId?.let { stringResource(it) },
-            text = error.messageResId?.let { stringResource(it) },
-            onDismiss = { error.onDismiss.invoke() },
-            onConfirm = { error.onConfirm.invoke() },
-        )
-    }
-
-    if (eventSaved.isLoading) {
-        LoadingDialog()
-    }
-
-    val event by viewModel.event.collectAsState()
+    val contentState by viewModel.contentState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         viewModel.fetchEventById(eventId)
     }
-    event.event?.let {
-        LaunchedEffect(Unit) {
-            viewModel.onEventTittleChanged(it.eventTittle)
-            viewModel.onEventDateChanged(it.date)
-            viewModel.onAddPhotos(it.eventPhotos.map { photo ->
-                photo.uri
-            })
-            viewModel.setAllNotes(it.eventNotes)
-            viewModel.setEventId(it.id)
+    when(val content = contentState) {
+        is EventDetailsState.Loading -> {
+            LoadingDialog()
         }
-        ManageEventContent(
-            eventTittle = eventTittle,
-            eventId = it.id,
-            eventDate = eventDate,
-            photos = photosUris,
-            notes = eventNotes,
-            addUpdateDetailsEventViewActions = { action ->
-                when(action) {
-                    is AddUpdateDetailsEventViewActions.OnBack -> viewModel.onBack()
-                    is AddUpdateDetailsEventViewActions.OnSave -> viewModel.onUpdateEvent()
-                    is AddUpdateDetailsEventViewActions.OnWriteName ->  viewModel.onEventTittleChanged(action.name)
-                    is AddUpdateDetailsEventViewActions.OnRemovePhoto -> viewModel.onRemovePhoto(action.photo)
-                    is AddUpdateDetailsEventViewActions.OnSelectDate ->  viewModel.onEventDateChanged(action.selectedDate)
-                    is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> viewModel.onAddPhotos(action.uris)
-                    is AddUpdateDetailsEventViewActions.OnUpdateNotes -> viewModel.onUpdateEventNote(action.note)
-                    is AddUpdateDetailsEventViewActions.OnAddNote -> viewModel.onAddEventNote(action.note)
-                    is AddUpdateDetailsEventViewActions.OnRemoveNote -> viewModel.onRemoveEventNote(action.id)
-                }
-            })
-    }
+        is EventDetailsState.Content -> {
+            LaunchedEffect(Unit) {
+                tittle = content.event.eventTittle
+                date = content.event.date
+                photos.clear()
+                photos.addAll(content.event.eventPhotos)
+                notes.clear()
+                notes.addAll(content.event.eventNotes)
+            }
+            ManageEventContent(
+                eventTittle = tittle,
+                eventId = content.event.id,
+                eventDate = date,
+                photos = photos,
+                notes = notes,
+                addUpdateDetailsEventViewActions = { action ->
+                    when(action) {
+                        is AddUpdateDetailsEventViewActions.OnBack -> viewModel.onBack()
+                        is AddUpdateDetailsEventViewActions.OnSave -> viewModel.onUpsertEvent(
+                            EventModel(content.event.id, eventTittle = tittle, imageUrl = photos.firstOrNull()?.uri?: Uri.EMPTY,
+                                date = date, eventPhotos = photos, eventNotes = notes)
+                        )
+                        is AddUpdateDetailsEventViewActions.OnWriteName ->  tittle = action.name
+                        is AddUpdateDetailsEventViewActions.OnRemovePhoto -> photos.remove(action.photo)
+                        is AddUpdateDetailsEventViewActions.OnSelectDate ->  date = action.selectedDate
+                        is AddUpdateDetailsEventViewActions.OnSelectCoverPhoto -> {
+                            val photosToAdd = action.uris.toEventPhotosList(photos.map { it.uri })
+                            photos.addAll(photosToAdd)
+                        }
+                        is AddUpdateDetailsEventViewActions.OnUpdateNotes -> notes[notes.indexOfFirst { it.id == action.note.id }] = action.note
+                        is AddUpdateDetailsEventViewActions.OnAddNote -> notes.add(action.note)
+                        is AddUpdateDetailsEventViewActions.OnRemoveNote -> notes.removeAt(notes.indexOfFirst { it.id == action.id })
+                    }
+                })
+        }
+        is EventDetailsState.UpsertEvent -> {
+            viewModel.onBack()
+        }
+        is EventDetailsState.Error -> {
 
-    event.error?.let { error ->
-        CustomAlertDialog(
-            confirmText = stringResource(error.confirmText),
-            dismissText = error.dismissText?.let { stringResource(it) },
-            title = error.titleResId?.let { stringResource(it) },
-            text = error.messageResId?.let { stringResource(it) },
-            onDismiss = { error.onDismiss.invoke() },
-            onConfirm = { error.onConfirm.invoke() },
-        )
-    }
-
-    if (event.isLoading) {
-        LoadingDialog()
+        }
     }
 }
