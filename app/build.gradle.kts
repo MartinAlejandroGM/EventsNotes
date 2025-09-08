@@ -68,6 +68,7 @@ dependencies {
     implementation(libs.bundles.hilt.essentials)
     implementation(libs.bundles.room.essentials)
     implementation(libs.androidx.datastore)
+    implementation(libs.bundles.work.essentials)
     debugImplementation(libs.androidx.ui.tooling)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.android.compiler)
