@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.utils
+package com.andro_sk.eventnotes.ui.extension
 
 import android.net.Uri
 import com.andro_sk.eventnotes.data.local.database.entities.EventsEntity

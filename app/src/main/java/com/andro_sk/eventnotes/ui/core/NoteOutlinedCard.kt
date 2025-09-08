@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventNote
-import com.andro_sk.eventnotes.ui.utils.generateRandomUUID
+import com.andro_sk.eventnotes.ui.extension.generateRandomUUID
 
 @Composable
 fun NoteOutlinedCard(

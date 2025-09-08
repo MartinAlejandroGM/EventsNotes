@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.views.upsert
+package com.andro_sk.eventnotes.ui.screen.upsert
 
 import android.net.Uri
 import androidx.compose.runtime.Composable
@@ -6,9 +6,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.EventNote
@@ -16,49 +16,39 @@ import com.andro_sk.eventnotes.domain.models.EventPhoto
 import com.andro_sk.eventnotes.ui.core.LoadingDialog
 import com.andro_sk.eventnotes.ui.core.ManageEventContent
 import com.andro_sk.eventnotes.ui.state.EventDetailsState
-import com.andro_sk.eventnotes.ui.utils.AddUpdateDetailsEventViewActions
-import com.andro_sk.eventnotes.ui.utils.toEventPhotosList
+import com.andro_sk.eventnotes.ui.extension.generateRandomUUID
+import com.andro_sk.eventnotes.ui.extension.toEventPhotosList
 import com.andro_sk.eventnotes.ui.viewmodels.UpsertViewModel
 
 @Composable
-fun UpdateEventView(
-    eventId: String,
+fun AddEventView(
     viewModel: UpsertViewModel = hiltViewModel()
 ) {
-
     var tittle by remember { mutableStateOf("") }
     var date by remember { mutableStateOf("") }
     val photos = remember { mutableStateListOf<EventPhoto>() }
     val notes = remember { mutableStateListOf<EventNote>() }
 
     val contentState by viewModel.contentState.collectAsStateWithLifecycle()
+
     LaunchedEffect(Unit) {
-        viewModel.fetchEventById(eventId)
+        viewModel.changeContentStateForAddView()
     }
-    when(val content = contentState) {
+    when(contentState) {
         is EventDetailsState.Loading -> {
             LoadingDialog()
         }
         is EventDetailsState.Content -> {
-            LaunchedEffect(Unit) {
-                tittle = content.event.eventTittle
-                date = content.event.date
-                photos.clear()
-                photos.addAll(content.event.eventPhotos)
-                notes.clear()
-                notes.addAll(content.event.eventNotes)
-            }
             ManageEventContent(
                 eventTittle = tittle,
-                eventId = content.event.id,
                 eventDate = date,
                 photos = photos,
                 notes = notes,
                 addUpdateDetailsEventViewActions = { action ->
-                    when(action) {
+                    when (action) {
                         is AddUpdateDetailsEventViewActions.OnBack -> viewModel.onBack()
                         is AddUpdateDetailsEventViewActions.OnSave -> viewModel.onUpsertEvent(
-                            EventModel(content.event.id, eventTittle = tittle, imageUrl = photos.firstOrNull()?.uri?: Uri.EMPTY,
+                            EventModel(generateRandomUUID(), eventTittle = tittle, imageUrl = photos.firstOrNull()?.uri?: Uri.EMPTY,
                                 date = date, eventPhotos = photos, eventNotes = notes)
                         )
                         is AddUpdateDetailsEventViewActions.OnWriteName ->  tittle = action.name
@@ -77,8 +67,6 @@ fun UpdateEventView(
         is EventDetailsState.UpsertEvent -> {
             viewModel.onBack()
         }
-        is EventDetailsState.Error -> {
-
-        }
+        is EventDetailsState.Error -> {}
     }
 }

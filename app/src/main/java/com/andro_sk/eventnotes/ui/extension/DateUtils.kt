@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.utils
+package com.andro_sk.eventnotes.ui.extension
 
 import java.time.LocalDate
 import java.time.ZoneId

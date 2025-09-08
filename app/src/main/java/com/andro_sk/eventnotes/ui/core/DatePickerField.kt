@@ -19,7 +19,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.andro_sk.eventnotes.ui.utils.convertMillisToDate
+import com.andro_sk.eventnotes.ui.extension.convertMillisToDate
 
 @Composable
 fun DatePickerField(

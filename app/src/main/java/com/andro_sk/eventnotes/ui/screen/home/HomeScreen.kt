@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.views.home
+package com.andro_sk.eventnotes.ui.screen.home
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.FilterList
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -28,28 +27,27 @@ import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.ui.core.EventCard
 import com.andro_sk.eventnotes.ui.core.LoadingDialog
-import com.andro_sk.eventnotes.ui.core.ThemeToggleButton
+import com.andro_sk.eventnotes.ui.core.DarkModeIcon
 import com.andro_sk.eventnotes.ui.navigation.AppRoutes
 import com.andro_sk.eventnotes.ui.state.EventState
 import com.andro_sk.eventnotes.ui.viewmodels.EventsViewModel
-import com.andro_sk.eventnotes.ui.viewmodels.UserSettingsViewModel
 
 @Composable
 fun HomeView(
     viewModel: EventsViewModel = hiltViewModel(),
-    userSettingsViewModel: UserSettingsViewModel
+    isDarkMode: Boolean,
+    onChangeTheme: (Boolean) -> Unit
 ) {
     val contentState by viewModel.contentState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.fetchContent()
-        userSettingsViewModel.getUserSettings()
     }
     when(val content = contentState) {
         EventState.Loading -> LoadingDialog()
         is EventState.Content -> {
                     HomeViewContent(
-                        userSettingsViewModel = userSettingsViewModel,
+                        isDarkMode = isDarkMode,
                         events = content.events,
                         homeViewActions = { action ->
                             when (action) {
@@ -74,6 +72,10 @@ fun HomeView(
                                 is HomeViewActions.FilterEvents -> {
                                     viewModel.updateSortBy()
                                 }
+
+                                is HomeViewActions.OnChangeTheme -> {
+                                    onChangeTheme.invoke(action.isDarkModeOn)
+                                }
                             }
                         }
                     )
@@ -86,13 +88,13 @@ fun HomeView(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeViewActions) -> Unit, userSettingsViewModel: UserSettingsViewModel) {
+private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeViewActions) -> Unit, isDarkMode: Boolean) {
     Scaffold(
         floatingActionButton = {
             GetFloatingButton(homeViewActions)
         },
         topBar = {
-            GetAppBar(homeViewActions, userSettingsViewModel)
+            GetAppBar(homeViewActions, isDarkMode = isDarkMode)
         }
     ) { innerPadding ->
         LazyColumn (modifier = Modifier
@@ -130,7 +132,7 @@ private fun GetFloatingButton(homeViewActions: (HomeViewActions) -> Unit) {
 @Composable
 private fun GetAppBar(
     homeViewActions: (HomeViewActions) -> Unit,
-    userSettingsViewModel: UserSettingsViewModel
+    isDarkMode: Boolean
 ) {
     TopAppBar(
         title = { Text(stringResource(R.string.your_events)) },
@@ -142,21 +144,10 @@ private fun GetAppBar(
                         contentDescription = "Filter"
                     )
                 }
-                IconButton(onClick = { homeViewActions.invoke(HomeViewActions.FilterEvents) }) {
-                    Icon(
-                        imageVector = Icons.Filled.Search,
-                        contentDescription = "Search"
-                    )
+                DarkModeIcon(isDarkMode) {
+                    homeViewActions.invoke(HomeViewActions.OnChangeTheme(it))
                 }
-                ThemeToggleButton(userSettingsViewModel)
             }
         }
     )
-}
-
-sealed class HomeViewActions {
-    data class OnNavigateToAddEvent(val eventId: String = "") : HomeViewActions()
-    data class OnNavigateToEventDetails(val eventId: String) : HomeViewActions()
-    data class RemoveEventItem(val eventId: String) : HomeViewActions()
-    object FilterEvents : HomeViewActions()
 }
