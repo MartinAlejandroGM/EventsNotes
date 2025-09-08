@@ -1,6 +1,5 @@
 package com.andro_sk.eventnotes.ui.views.home
 
-import android.net.Uri
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -19,92 +18,81 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventModel
-import com.andro_sk.eventnotes.ui.core.CustomAlertDialog
 import com.andro_sk.eventnotes.ui.core.EventCard
 import com.andro_sk.eventnotes.ui.core.LoadingDialog
+import com.andro_sk.eventnotes.ui.core.ThemeToggleButton
 import com.andro_sk.eventnotes.ui.navigation.AppRoutes
+import com.andro_sk.eventnotes.ui.state.EventState
 import com.andro_sk.eventnotes.ui.viewmodels.EventsViewModel
+import com.andro_sk.eventnotes.ui.viewmodels.UserSettingsViewModel
 
 @Composable
 fun HomeView(
-    viewModel: EventsViewModel = hiltViewModel()
+    viewModel: EventsViewModel = hiltViewModel(),
+    userSettingsViewModel: UserSettingsViewModel
 ) {
-    val events by viewModel.events.collectAsState()
-    var filteredBy by remember { mutableStateOf("date") }
+    val contentState by viewModel.contentState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(filteredBy) {
-        viewModel.fetchEvents(filteredBy)
+    LaunchedEffect(Unit) {
+        viewModel.fetchContent()
+        userSettingsViewModel.getUserSettings()
     }
+    when(val content = contentState) {
+        EventState.Loading -> LoadingDialog()
+        is EventState.Content -> {
+                    HomeViewContent(
+                        userSettingsViewModel = userSettingsViewModel,
+                        events = content.events,
+                        homeViewActions = { action ->
+                            when (action) {
+                                is HomeViewActions.OnNavigateToEventDetails -> {
+                                    viewModel.navigateTo(
+                                        route = AppRoutes.EVENT_DETAILS,
+                                        eventId = action.eventId
+                                    )
+                                }
 
-    events.events?.let {
-        HomeViewContent(
-            events = it,
-            homeViewActions = { action ->
-                when (action) {
-                    is HomeViewActions.OnNavigateToEventDetails -> {
-                        viewModel.navigateTo(
-                            route = AppRoutes.EVENT_DETAILS,
-                            eventId = action.eventId,
-                            filterBy = filteredBy
-                        )
-                    }
-                    is HomeViewActions.RemoveEventItem -> {
-                        viewModel.deleteEventById(action.eventId, filteredBy)
-                    }
-                    is HomeViewActions.OnNavigateToAddEvent -> {
-                        viewModel.navigateTo(
-                            route = AppRoutes.ADD_EVENT,
-                            eventId = action.eventId,
-                            filterBy = filteredBy
-                        )
-                    }
-                    is HomeViewActions.FilterEvents -> {
-                        if (filteredBy == "date")
-                            filteredBy = "name"
-                        else filteredBy = "date"
-                    }
-                }
-            }
-        )
-    }
+                                is HomeViewActions.RemoveEventItem -> {
+                                    viewModel.deleteEventById(action.eventId)
+                                }
 
-    events.error?.let { error ->
-        CustomAlertDialog(
-            confirmText = stringResource(error.confirmText),
-            dismissText = error.dismissText?.let { stringResource(it) },
-            title = error.titleResId?.let { stringResource(it) },
-            text = error.messageResId?.let { stringResource(it) },
-            onDismiss = { error.onDismiss.invoke() },
-            onConfirm = { error.onConfirm.invoke() },
-        )
-    }
+                                is HomeViewActions.OnNavigateToAddEvent -> {
+                                    viewModel.navigateTo(
+                                        route = AppRoutes.ADD_EVENT,
+                                        eventId = action.eventId
+                                    )
+                                }
 
-    if (events.isLoading) {
-        LoadingDialog()
+                                is HomeViewActions.FilterEvents -> {
+                                    viewModel.updateSortBy()
+                                }
+                            }
+                        }
+                    )
+
+        }
+        is EventState.Error -> {
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeViewActions) -> Unit) {
+private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeViewActions) -> Unit, userSettingsViewModel: UserSettingsViewModel) {
     Scaffold(
         floatingActionButton = {
             GetFloatingButton(homeViewActions)
         },
         topBar = {
-            GetAppBar(homeViewActions)
+            GetAppBar(homeViewActions, userSettingsViewModel)
         }
     ) { innerPadding ->
         LazyColumn (modifier = Modifier
@@ -121,7 +109,7 @@ private fun HomeViewContent(events: List<EventModel>, homeViewActions: (HomeView
                             homeViewActions.invoke(HomeViewActions.OnNavigateToEventDetails(event.id))
                                   },
                     onRemoveEvent = {
-                        homeViewActions.invoke(HomeViewActions.RemoveEventItem(event.id)) 
+                        homeViewActions.invoke(HomeViewActions.RemoveEventItem(event.id))
                                     }
                 )
             }
@@ -141,7 +129,8 @@ private fun GetFloatingButton(homeViewActions: (HomeViewActions) -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GetAppBar(
-    homeViewActions: (HomeViewActions) -> Unit
+    homeViewActions: (HomeViewActions) -> Unit,
+    userSettingsViewModel: UserSettingsViewModel
 ) {
     TopAppBar(
         title = { Text(stringResource(R.string.your_events)) },
@@ -159,6 +148,7 @@ private fun GetAppBar(
                         contentDescription = "Search"
                     )
                 }
+                ThemeToggleButton(userSettingsViewModel)
             }
         }
     )
@@ -169,45 +159,4 @@ sealed class HomeViewActions {
     data class OnNavigateToEventDetails(val eventId: String) : HomeViewActions()
     data class RemoveEventItem(val eventId: String) : HomeViewActions()
     object FilterEvents : HomeViewActions()
-}
-
-@Preview
-@Composable
-fun HomePreview() {
-    HomeViewContent(
-        events = listOf(
-            EventModel(
-                id = "1",
-                eventTittle = "Mario's Party",
-                imageUrl = Uri.EMPTY
-            ),
-            EventModel(
-                id = "2",
-                eventTittle = "Luigi's Party",
-                imageUrl = Uri.EMPTY
-            ),
-            EventModel(
-                id = "3",
-                eventTittle = "Peach's Party",
-                imageUrl = Uri.EMPTY
-            ),
-            EventModel(
-                id = "4",
-                eventTittle = "Daisy's Party",
-                imageUrl = Uri.EMPTY
-            ),
-            EventModel(
-                id = "5",
-                eventTittle = "Rosalina's Party",
-                imageUrl = Uri.EMPTY
-            )
-        )
-    ) {
-        when (it) {
-            is HomeViewActions.OnNavigateToEventDetails -> {}
-            is HomeViewActions.RemoveEventItem -> {}
-            is HomeViewActions.OnNavigateToAddEvent -> {}
-            is HomeViewActions.FilterEvents -> {}
-        }
-    }
 }

@@ -17,11 +17,11 @@ fun String.getDescriptionDaysText(): String {
     return if (daysLeft < 0) "Event Passed" else if(daysLeft == 0L) "its today!!" else "$daysLeft days left"
 }
 
-private fun String.getParsedDateOrDefaultDate(formatter: String = "MM/dd/yyyy"): LocalDate {
+fun String.getParsedDateOrDefaultDate(formatter: String = "MM/dd/yyyy"): LocalDate {
     val currentFormatter = DateTimeFormatter.ofPattern(formatter)
     return try {
         LocalDate.parse(this, currentFormatter)
-    } catch (exception: DateTimeParseException) {
+    } catch (_: DateTimeParseException) {
         LocalDate.parse("10/16/1995", currentFormatter)
     }
 }
