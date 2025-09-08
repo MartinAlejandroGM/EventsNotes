@@ -42,10 +42,10 @@ fun CustomAlertDialog(
 @Composable
 fun CustomAlertDialogPreview() {
     CustomAlertDialog(
-        confirmText = "Confirm",
-        dismissText = "Dismiss",
-        title = "Title",
-        text = "This is a text",
+        confirmText = "Re-Intentar",
+        dismissText = "Cancelar",
+        title = "Titulo",
+        text = "Esto es el texto de un error",
         onDismiss = { },
         onConfirm = { },
     )

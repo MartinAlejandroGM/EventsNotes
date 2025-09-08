@@ -7,18 +7,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.andro_sk.eventnotes.ui.viewmodels.UserSettingsViewModel
 
 @Composable
-fun ThemeToggleButton(
-    settingsViewModel: UserSettingsViewModel
+fun DarkModeIcon(
+    isDarkMode: Boolean,
+    onChangeTheme: (Boolean) -> Unit
 ) {
-    val isDarkMode by settingsViewModel.isDarkMode.collectAsStateWithLifecycle()
     IconButton(
         onClick = {
-            settingsViewModel.updateTheme()
+            onChangeTheme.invoke(!isDarkMode)
         }
     ) {
         Icon(

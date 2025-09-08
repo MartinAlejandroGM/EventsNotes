@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventNote
 import com.andro_sk.eventnotes.domain.models.EventPhoto
-import com.andro_sk.eventnotes.ui.utils.AddUpdateDetailsEventViewActions
+import com.andro_sk.eventnotes.ui.screen.upsert.AddUpdateDetailsEventViewActions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

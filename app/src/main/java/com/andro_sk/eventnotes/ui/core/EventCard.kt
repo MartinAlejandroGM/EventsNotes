@@ -24,7 +24,6 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.andro_sk.eventnotes.R
 import com.andro_sk.eventnotes.domain.models.EventModel
-import com.andro_sk.eventnotes.ui.views.home.Card
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

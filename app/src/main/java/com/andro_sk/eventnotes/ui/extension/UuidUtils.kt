@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.utils
+package com.andro_sk.eventnotes.ui.extension
 
 import java.util.UUID
 

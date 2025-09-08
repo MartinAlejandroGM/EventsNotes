@@ -7,8 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import com.andro_sk.eventnotes.ui.utils.fixUtcToLocalMillis
-import com.andro_sk.eventnotes.ui.utils.getTodaySystemDateInMillis
+import com.andro_sk.eventnotes.ui.extension.fixUtcToLocalMillis
+import com.andro_sk.eventnotes.ui.extension.getTodaySystemDateInMillis
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,6 +20,8 @@ fun DatePickerModal(
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = selectedDateMillis ?: getTodaySystemDateInMillis()
     )
+
+    val dateSelected = datePickerState.selectedDateMillis != null
 
     DatePickerDialog(
         onDismissRequest = onDismiss,
@@ -35,7 +37,8 @@ fun DatePickerModal(
                 onClick = {
                     onDateSelected(fixUtcToLocalMillis(datePickerState.selectedDateMillis))
                     onDismiss()
-                }
+                },
+                enabled = dateSelected
             ) {
                 Text("Done")
             }

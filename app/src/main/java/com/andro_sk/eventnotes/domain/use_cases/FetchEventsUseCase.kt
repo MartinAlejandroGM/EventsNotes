@@ -3,7 +3,7 @@ package com.andro_sk.eventnotes.domain.use_cases
 import com.andro_sk.eventnotes.data.local.repository.EventNotesDbRepositoryImpl
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
-import com.andro_sk.eventnotes.ui.utils.getParsedDateOrDefaultDate
+import com.andro_sk.eventnotes.ui.extension.getParsedDateOrDefaultDate
 import javax.inject.Inject
 
 class FetchEventsUseCase @Inject constructor(

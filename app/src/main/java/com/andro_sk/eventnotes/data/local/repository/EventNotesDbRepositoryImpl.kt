@@ -6,11 +6,11 @@ import com.andro_sk.eventnotes.data.local.database.daos.NotesDao
 import com.andro_sk.eventnotes.domain.contracts.EventsRepository
 import com.andro_sk.eventnotes.domain.models.EventModel
 import com.andro_sk.eventnotes.domain.models.Response
-import com.andro_sk.eventnotes.ui.utils.getEventModelByDaos
-import com.andro_sk.eventnotes.ui.utils.getEventsModelByDaos
-import com.andro_sk.eventnotes.ui.utils.toEventEntity
-import com.andro_sk.eventnotes.ui.utils.toNotesEntity
-import com.andro_sk.eventnotes.ui.utils.toPhotosEntity
+import com.andro_sk.eventnotes.ui.extension.getEventModelByDaos
+import com.andro_sk.eventnotes.ui.extension.getEventsModelByDaos
+import com.andro_sk.eventnotes.ui.extension.toEventEntity
+import com.andro_sk.eventnotes.ui.extension.toNotesEntity
+import com.andro_sk.eventnotes.ui.extension.toPhotosEntity
 import javax.inject.Inject
 
 class EventNotesDbRepositoryImpl @Inject constructor(

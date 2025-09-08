@@ -18,9 +18,9 @@ import androidx.navigation.navArgument
 import com.andro_sk.eventnotes.data.local.navigation.NavigationAction
 import com.andro_sk.eventnotes.domain.contracts.NavigationReceiver
 import com.andro_sk.eventnotes.ui.viewmodels.UserSettingsViewModel
-import com.andro_sk.eventnotes.ui.views.upsert.AddEventView
-import com.andro_sk.eventnotes.ui.views.home.HomeView
-import com.andro_sk.eventnotes.ui.views.upsert.UpdateEventView
+import com.andro_sk.eventnotes.ui.screen.upsert.AddEventView
+import com.andro_sk.eventnotes.ui.screen.home.HomeView
+import com.andro_sk.eventnotes.ui.screen.upsert.UpdateEventView
 import kotlinx.coroutines.launch
 
 @Composable
@@ -36,6 +36,7 @@ fun AppNavigation(navigationReceiver: NavigationReceiver, userSettingsViewModel:
     }
 
     LifecycleResumeEffect(Unit) {
+        userSettingsViewModel.getUserSettings()
         val navigationBusJob = lifecycleScope.launch {
             navigationReceiver.navigation.collect { action ->
                 when (action) {
@@ -81,7 +82,9 @@ fun AppNavigation(navigationReceiver: NavigationReceiver, userSettingsViewModel:
                 startDestination = AppRoutes.HOME
             ) {
                 composable(route = AppRoutes.HOME) {
-                    HomeView(userSettingsViewModel = userSettingsViewModel)
+                    HomeView(isDarkMode = isDarkMode){
+                        userSettingsViewModel.updateTheme()
+                    }
                 }
                 composable(
                     route = AppRoutes.ADD_EVENT

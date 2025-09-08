@@ -1,4 +1,4 @@
-package com.andro_sk.eventnotes.ui.views.home
+package com.andro_sk.eventnotes.ui.core
 
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -29,7 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.andro_sk.eventnotes.domain.models.EventModel
-import com.andro_sk.eventnotes.ui.utils.getDescriptionDaysText
+import com.andro_sk.eventnotes.ui.extension.getDescriptionDaysText
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 
